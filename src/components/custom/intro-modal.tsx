@@ -1,17 +1,26 @@
 import { Modal, ModalContent, ModalBody } from "@nextui-org/react";
 import React from "react";
 
-export function FullModal({
+export function IntroModal({
   dissmissable,
   children,
   isOpen,
   onOpenChange,
+  setShowModal,
 }: {
   dissmissable: boolean;
   children: React.ReactNode;
   isOpen: boolean;
   onOpenChange: () => void;
+  setShowModal?: (show: boolean) => void;
 }) {
+  const handleClick = (onClose: () => void) => {
+    onClose();
+    if (setShowModal) {
+      setShowModal(false);
+    }
+  };
+
   return (
     <Modal
       size="full"
@@ -23,7 +32,9 @@ export function FullModal({
       className="overflow-clip"
     >
       <ModalContent>
-        {(onClose) => <ModalBody onClick={onClose}>{children}</ModalBody>}
+        {(onClose) => (
+          <ModalBody onClick={() => handleClick(onClose)}>{children}</ModalBody>
+        )}
       </ModalContent>
     </Modal>
   );
