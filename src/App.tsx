@@ -75,7 +75,9 @@ function App() {
           <div className="absolute z-10 w-full -top-28 -left-80">
             <img
               src="/Top.png"
-              alt="Task example"
+              width={960}
+              height={540}
+              alt="Top Decoration"
               className="w-full object-cover"
             />
           </div>
@@ -87,6 +89,8 @@ function App() {
             <div className="flex w-full justify-center items-center">
               <img
                 src="/QBYFI-Logo.png"
+                width={740}
+                height={520}
                 alt="Task example"
                 className="object-cover rounded-lg"
               />
@@ -101,6 +105,8 @@ function App() {
           <div className="absolute z-5 w-full -bottom-8 -right-[750] scale-150">
             <img
               src="/Bottom.png"
+              width={960}
+              height={540}
               alt="Task example"
               className="w-full object-cover"
             />
@@ -201,7 +207,7 @@ function App() {
               <Button
                 variant="ghost"
                 radius="lg"
-                onClick={() => onConfirmOpenChange(false)}
+                onPress={() => onConfirmOpenChange(false)}
                 className="w-64 h-fit transition-all duration-300 hover:bg-gray-100 py-4 px-16 items-center bg-[#3A1852]"
               >
                 <p className="text-3xl text-white font-medium">Back</p>
@@ -209,7 +215,7 @@ function App() {
               <Button
                 variant="ghost"
                 radius="lg"
-                onClick={handleProceed}
+                onPress={handleProceed}
                 className="w-64 h-fit transition-all duration-300 hover:bg-gray-100 py-4 px-16 bg-[#C70655]"
               >
                 <p className="text-3xl text-white font-medium">Proceed</p>
@@ -266,7 +272,7 @@ function App() {
                 </div>
                 <Button
                   variant="ghost"
-                  onClick={() => {
+                  onPress={() => {
                     // Reset state for a new session
                     setSelectedPackage(null);
                     setCoinsInserted(0);

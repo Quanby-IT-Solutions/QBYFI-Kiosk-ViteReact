@@ -2,9 +2,11 @@ import plugin from "tailwindcss/plugin";
 import { nextui } from "@nextui-org/react";
 
 /** @type {import('tailwindcss').Config} */
-const config = {
+export default {
   darkMode: ["class"],
   content: [
+    "./index.html",
+    "./src/**/*.{js,ts,jsx,tsx}",
     "./src/pages/**/*.{js,ts,jsx,tsx,mdx}",
     "./src/components/**/*.{js,ts,jsx,tsx,mdx}",
     "./src/app/**/*.{js,ts,jsx,tsx,mdx}",
@@ -169,7 +171,7 @@ const config = {
     },
   },
   plugins: [
-    import("tailwindcss-animate"),
+    require("tailwindcss-animate"),
     plugin(({ addUtilities }) => {
       addUtilities({
         ".touch-pan-y": {
@@ -186,5 +188,3 @@ const config = {
     nextui(),
   ],
 };
-
-export default config;
