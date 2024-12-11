@@ -7,9 +7,12 @@ import csv
 import json
 import os
 from datetime import datetime 
+from flask_cors import CORS
 
 app = Flask(__name__)
-socketio = SocketIO(app)
+CORS(app)  # Allow all origins by default
+socketio = SocketIO(app, cors_allowed_origins="*") 
+CORS(app, resources={r"/*": {"origins": "*"}}) # Enable CORS for SocketIO
 
 GPIO.setmode(GPIO.BOARD)
 
