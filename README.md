@@ -1,2 +1,2 @@
-# QBYFI-Kiosk-ViteVue
+# QBYFI-Kiosk-ViteReact
  

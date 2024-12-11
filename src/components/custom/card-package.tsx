@@ -3,7 +3,7 @@
 import React from "react";
 import { Button } from "@nextui-org/react";
 
-export const CardPackage = ({
+export function CardPackage({
   time,
   amount,
   dimmed,
@@ -15,7 +15,7 @@ export const CardPackage = ({
   dimmed: boolean; // Control dimming
   highlighted: boolean; // Highlight selected package
   onClick: () => void; // Handle click events
-}) => {
+}) {
   return (
     <Button
       variant="ghost"
@@ -31,7 +31,13 @@ export const CardPackage = ({
     >
       <div className="flex flex-col p-4 gap-14">
         <div>
-          <p className={`pt-4 text-3xl font-medium ${highlighted ? "text-white font-black" : "text-black font-medium"}`}>{time}</p>
+          <p
+            className={`pt-4 text-3xl font-medium ${
+              highlighted ? "text-white font-black" : "text-black font-medium"
+            }`}
+          >
+            {time}
+          </p>
         </div>
         <div
           className={`w-56 py-4 px-16  rounded-2xl ${
@@ -45,4 +51,4 @@ export const CardPackage = ({
       </div>
     </Button>
   );
-};
+}
