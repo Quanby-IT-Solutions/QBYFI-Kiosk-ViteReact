@@ -13,6 +13,7 @@ import {
   ModalBody,
   ModalFooter,
 } from "@nextui-org/react";
+import io from "socket.io-client";
 
 type PackageCards = {
   time: string;
