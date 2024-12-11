@@ -72,15 +72,15 @@ function App() {
     transports: ["websocket"],
   });
 
+  // Listen for the 'coin_update' event and update the state
   useEffect(() => {
-    // Listen for coin count updates from the backend
-    socket.on("coin_update", (data) => {
-      setCoinsInserted(data.coin_count);
+    socket.on("coin_update", (data: { coin_count: number }) => {
+      setCoinsInserted(data.coin_count); // Update the state with the new coin count
     });
 
-    // Cleanup socket connection when the component unmounts
+    // Clean up the event listener when the component unmounts
     return () => {
-      socket.disconnect();
+      socket.off("coin_update");
     };
   }, []);
 
