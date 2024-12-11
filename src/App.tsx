@@ -68,29 +68,27 @@ function App() {
     onOutroOpen(); // Open success modal
   };
 
-  const socket = io("http://localhost:4000");
-
-  const closeModal = () => {
-    setShowModal(false);
-
-    socket.emit("start_coin_acceptance");
-  };
+  const socket = io("http://192.168.40.2:4000");
 
   useEffect(() => {
-    // Listen for 'coin_update' from the backend
+    // Listen for coin count updates from the backend
     socket.on("coin_update", (data) => {
-      if (data && typeof data.coin_count === "number") {
-        setCoinsInserted(data.coin_count); // Update the coin count in state
-      } else {
-        console.error("Invalid data received:", data);
-      }
+      setCoinsInserted(data.coin_count);
     });
 
-    // Cleanup socket connection on component unmount
+    // Cleanup socket connection when the component unmounts
     return () => {
       socket.disconnect();
     };
   }, []);
+
+  const closeModal = () => {
+    // Close the modal when the user clicks the button or closes the modal
+    setShowModal(false);
+
+    // Emit the 'start_coin_acceptance' event to trigger coin acceptance process
+    socket.emit("start_coin_acceptance");
+  };
 
   return (
     <motion.div className="p-0 gap-10 overflow-clip">
