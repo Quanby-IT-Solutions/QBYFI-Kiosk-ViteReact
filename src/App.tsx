@@ -68,7 +68,7 @@ function App() {
     onOutroOpen(); // Open success modal
   };
 
-  const socket = io("http://192.168.40.2:4000");
+  const socket = io("http://localhost:4000");
 
   const closeModal = () => {
     setShowModal(false);
