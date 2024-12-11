@@ -64,8 +64,12 @@ function App() {
   };
 
   const handleProceed = () => {
-    onConfirmOpenChange(false); // Close confirmation modal
-    onOutroOpen(); // Open success modal
+    if (selectedPackage !== null) {
+      // Emit the selected package amount to the backend for voucher processing
+      socket.emit("voucher_button_click", packages[selectedPackage!].amount);
+      onConfirmOpenChange(false); // Close the confirmation modal
+      onOutroOpen(); // Open the outro modal
+    }
   };
 
   const socket = io("http://192.168.40.2:4000", {
