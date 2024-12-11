@@ -1,5 +1,6 @@
 from flask import Flask, jsonify, render_template, request
 from flask_socketio import SocketIO, emit
+from flask_cors import CORS  # Import CORS
 from escpos.printer import Usb
 import OPi.GPIO as GPIO
 import time
@@ -7,11 +8,11 @@ import csv
 import json
 import os
 from datetime import datetime 
-from flask_cors import CORS
 
 app = Flask(__name__)
-CORS(app)  # Enable CORS for the entire app
-socketio = SocketIO(app, cors_allowed_origins="*") 
+CORS(app)  # Enable CORS for all routes
+
+socketio = SocketIO(app)
 
 GPIO.setmode(GPIO.BOARD)
 
