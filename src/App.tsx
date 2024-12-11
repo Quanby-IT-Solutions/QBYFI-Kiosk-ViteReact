@@ -50,34 +50,9 @@ function App() {
   }, [onIntroOpen]);
 
   const [coinsInserted, setCoinsInserted] = useState(0);
-  
-    // Establish the connection to the Flask backend using Socket.IO
-    const socket = io("http://localhost:4000"); // Change URL if needed for your
-
-  useEffect(() => { Flask backend
-
-    // Listen for coin count updates from the backend
-    socket.on("coin_update", (data) => {
-      // Update the coin count state when a new value is received
-      setCoinsInserted(data.coin_count);
-    });
-
-    // Cleanup on component unmount
-    return () => {
-      socket.disconnect();
-    };
-  }, []);
-
   const [selectedPackage, setSelectedPackage] = useState<number | null>(null); // Track the selected package
 
   const [showModal, setShowModal] = useState(true);
-
-  const handleCloseModal = () => {
-    setShowModal(false);
-
-    // Emit the 'start_coin_acceptance' event to trigger coin acceptance process
-    socket.emit("start_coin_acceptance");
-  };
 
   const handleSelectPackage = (index: number) => {
     if (selectedPackage === index) {
@@ -92,6 +67,30 @@ function App() {
     onOutroOpen(); // Open success modal
   };
 
+  const socket = io("http://192.168.40.2:4000");
+
+  const closeModal = () => {
+    setShowModal(false);
+
+    socket.emit("start_coin_acceptance");
+  };
+
+  useEffect(() => {
+    // Listen for 'coin_update' from the backend
+    socket.on("coin_update", (data) => {
+      if (data && typeof data.coin_count === "number") {
+        setCoinsInserted(data.coin_count); // Update the coin count in state
+      } else {
+        console.error("Invalid data received:", data);
+      }
+    });
+
+    // Cleanup socket connection on component unmount
+    return () => {
+      socket.disconnect();
+    };
+  }, []);
+
   return (
     <motion.div className="p-0 gap-10 overflow-clip">
       {showModal ? (
@@ -99,7 +98,7 @@ function App() {
           dissmissable={false}
           isOpen={isIntroOpen}
           onOpenChange={onIntroOpenChange}
-          setShowModal={handleCloseModal}
+          setShowModal={closeModal}
         >
           <div className="relative w-screen h-screen">
             <div className="absolute z-10 w-full -top-28 -left-80">
