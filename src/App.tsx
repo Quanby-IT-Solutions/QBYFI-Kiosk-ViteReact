@@ -47,14 +47,29 @@ function App() {
 
   useEffect(() => {
     onIntroOpen(); // Open the modal when the page loads
+    fetchCoinBalance();
   }, [onIntroOpen]);
 
-  const [coinsInserted, setCoinsInserted] = useState(50); // Assume 50 coins for this example
+  const [coinsInserted, setCoinsInserted] = useState<number>(0); // Updated to fetch from backend
   const [selectedPackage, setSelectedPackage] = useState<number | null>(null); // Track the selected package
 
   const [showModal, setShowModal] = useState(true);
 
   const closeModal = () => setShowModal(false);
+
+  const fetchCoinBalance = async () => {
+    try {
+      const response = await fetch("/api/coins"); // Adjust to your backend endpoint
+      if (response.ok) {
+        const data = await response.json();
+        setCoinsInserted(data.coins);
+      } else {
+        console.error("Failed to fetch coin balance");
+      }
+    } catch (error) {
+      console.error("Error fetching coin balance:", error);
+    }
+  };
 
   const handleSelectPackage = (index: number) => {
     if (selectedPackage === index) {
@@ -64,9 +79,45 @@ function App() {
     }
   };
 
-  const handleProceed = () => {
-    onConfirmOpenChange(false); // Close confirmation modal
-    onOutroOpen(); // Open success modal
+  const handleProceed = async () => {
+    if (selectedPackage === null) return;
+
+    try {
+      const response = await fetch("/api/purchase", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          package: packages[selectedPackage],
+        }),
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        console.log("Purchase successful:", data);
+        onConfirmOpenChange(false); // Close confirmation modal
+        onOutroOpen(); // Open success modal
+      } else {
+        console.error("Purchase failed");
+      }
+    } catch (error) {
+      console.error("Error during purchase:", error);
+    }
+  };
+
+  const resetSession = async () => {
+    try {
+      const response = await fetch("/api/reset", { method: "POST" });
+      if (response.ok) {
+        setSelectedPackage(null);
+        await fetchCoinBalance();
+        onOutroOpenChange(false);
+        onIntroOpen();
+      } else {
+        console.error("Failed to reset session");
+      }
+    } catch (error) {
+      console.error("Error resetting session:", error);
+    }
   };
 
   return (
@@ -139,7 +190,6 @@ function App() {
             alt="Task example"
             className="absolute top-20 object-cover pb-24 rounded-lg"
           />
-
           {/* Base Transaction Page */}
           <div className="w-full z-5 h-screen pt-24 flex flex-col items-center justify-center">
             <div className="w-fit h-fit flex flex-col items-center justify-center gap-10 text-black">
@@ -194,22 +244,18 @@ function App() {
                 You are about to purchase the following package:
               </ModalHeader>
               <ModalBody>
-                <ModalBody>
-                  <div className="flex flex-col justify-cenetr items-center p-4">
-                    {selectedPackage !== null && (
-                      <CardPackage
-                        time={packages[selectedPackage].time}
-                        amount={packages[selectedPackage].amount}
-                        dimmed={false} // No dimming for display purposes
-                        highlighted={true} // Highlight the selected package
-                        onClick={() => {}} // No action on click in modal
-                      />
-                    )}
-                    <p className="mt-4">
-                      Are you sure you want to proceed with this purchase?
-                    </p>
-                  </div>
-                </ModalBody>
+                {selectedPackage !== null && (
+                  <CardPackage
+                    time={packages[selectedPackage].time}
+                    amount={packages[selectedPackage].amount}
+                    dimmed={false}
+                    highlighted={true}
+                    onClick={() => {}}
+                  />
+                )}
+                <p className="mt-4">
+                  Are you sure you want to proceed with this purchase?
+                </p>
               </ModalBody>
               <ModalFooter className="justify-around">
                 <Button
@@ -239,6 +285,7 @@ function App() {
             onOpenChange={onOutroOpenChange}
           >
             <div className="relative flex w-screen h-screen items-center justify-center">
+              {/* OutroModal content */}
               <div className="absolute z-0 w-full -top-28 -left-80">
                 <img
                   src="/Top.png"
@@ -281,17 +328,10 @@ function App() {
                   </div>
                   <Button
                     variant="faded"
-                    onPress={() => {
-                      // Reset state for a new session
-                      setSelectedPackage(null);
-
-                      // Close the outro modal and reopen the intro modal
-                      onOutroOpenChange(false);
-                      onIntroOpen();
-                    }}
-                    className={`w-fit h-fit transition-all duration-300 hover:bg-gray-100 bg-gradient-to-t from-[#3A1852] to-[#C70655] rounded-xl border-none`}
+                    onPress={resetSession}
+                    className="w-fit h-fit transition-all duration-300 hover:bg-gray-100 bg-gradient-to-t from-[#3A1852] to-[#C70655] rounded-xl border-none"
                   >
-                    <p className={`py-4 px-16 text-3xl text-white font-medium`}>
+                    <p className="py-4 px-16 text-3xl text-white font-medium">
                       Need another transaction?
                     </p>
                   </Button>

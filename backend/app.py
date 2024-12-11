@@ -1,190 +1,98 @@
-from flask import Flask, jsonify, render_template, request
-from flask_socketio import SocketIO, emit
-from escpos.printer import Usb
-import OPi.GPIO as GPIO
-import time
-import csv
-import json
 import os
-from datetime import datetime 
+import time
+import json
+import RPi.GPIO as GPIO  # Replace with OrangePi.GPIO for Orange Pi compatibility
+import usb.core
+import usb.util
+from flask import Flask, jsonify, request
 
 app = Flask(__name__)
-socketio = SocketIO(app)
 
-GPIO.setmode(GPIO.BOARD)
+# GPIO configuration
+COIN_PIN = 17  # Example GPIO pin for coin inserter
+GPIO.setmode(GPIO.BCM)
+GPIO.setup(COIN_PIN, GPIO.IN, pull_up_down=GPIO.PUD_DOWN)
 
-VENDOR_ID = 0x20d1
-PRODUCT_ID = 0x7009
+# State variables
+coins_inserted = 0
+purchase_log = []
 
-# Initialize the printer object
-printer = Usb(VENDOR_ID, PRODUCT_ID)
+# Printer configuration
+USB_VENDOR_ID = 0x1234  # Replace with your printer's vendor ID
+USB_PRODUCT_ID = 0x5678  # Replace with your printer's product ID
+printer = usb.core.find(idVendor=USB_VENDOR_ID, idProduct=USB_PRODUCT_ID)
 
-COIN_SENSOR_PIN = 3  # GPIO pin connected to the coin acceptor
-ENABLE_PIN = 5
+if printer is None:
+    raise ValueError("Printer not found. Check USB connection.")
 
-coin_count = 0  # Total value of coins inserted
-pulse_count = 0  # To count pulses for determining coin type
-last_pulse_time = time.time()  # Tracks the time of the last pulse
+# Function to initialize printer
+def initialize_printer():
+    printer.set_configuration()
 
-# Load vouchers from CSV file
-def load_vouchers():
-    vouchers = {}
+# Function to print voucher
+def print_voucher(package_time, package_amount):
     try:
-        with open("vouchers.csv", mode='r', newline='') as file:
-            csv_reader = csv.reader(file)
-            for row in csv_reader:
-                amount = int(row[0])
-                voucher_code = row[1]
-                if amount in vouchers:
-                    vouchers[amount].append(voucher_code)
-                else:
-                    vouchers[amount] = [voucher_code]
-    except FileNotFoundError:
-        print("Error: vouchers.csv file not found!")
-    return vouchers
-    
-# Save vouchers back to the CSV file
-def save_vouchers(vouchers):
-    with open("vouchers.csv", mode='w', newline='') as file:
-        csv_writer = csv.writer(file)
-        for amount, codes in vouchers.items():
-            for code in codes:
-                csv_writer.writerow([amount, code])
-
-# Print the total count of vouchers per amount
-def print_voucher_totals(vouchers):
-    print("Available vouchers:")
-    for amount, codes in vouchers.items():
-        print(f"{amount} pesos: {len(codes)}")
-    print()
-
-vouchers = load_vouchers()
-print_voucher_totals(vouchers)  # Print initial voucher totals
-
-# Append log entry to logs.json
-def log_voucher_use(amount, voucher_code):
-    log_entry = {
-        "date": datetime.now().strftime("%Y-%m-%d"),
-        "time": datetime.now().strftime("%H:%M:%S"),
-        "amount": amount,
-        "voucher_code": voucher_code
-    }
-    try:
-        if os.path.exists("logs.json"):
-            with open("logs.json", mode='r') as file:
-                logs = json.load(file)
-        else:
-            logs = []
-
-        logs.append(log_entry)
-
-        with open("logs.json", mode='w') as file:
-            json.dump(logs, file, indent=4)
-        print("Log entry added:", log_entry)
-    except FileNotFoundError:
-        print("Error: File not found")
+        initialize_printer()
+        voucher_text = f"""
+        -------------------------
+        Thank you for your purchase!
+        Package: {package_time}
+        Price: {package_amount}.00 coins
+        -------------------------
+        """
+        # Send data to printer
+        printer.write(1, voucher_text.encode('utf-8'))
+        printer.write(1, b"\n\n\n")  # Add extra line feeds
+        print("Voucher printed successfully.")
     except Exception as e:
-        print("Error writing to logs.json:", e)
+        print(f"Error printing voucher: {e}")
 
+# GPIO callback for coin insertion
 def coin_inserted(channel):
-    global last_pulse_time, pulse_count, coin_count
-    current_time = time.time()
-    pulse_count += 1
-    last_pulse_time = current_time
+    global coins_inserted
+    coins_inserted += 1
+    print(f"Coin detected. Total coins: {coins_inserted}")
 
-# Set up the GPIO pin for the coin sensor
-GPIO.setup(COIN_SENSOR_PIN, GPIO.IN, pull_up_down=GPIO.PUD_DOWN)
-GPIO.setup(ENABLE_PIN, GPIO.OUT)
-GPIO.output(ENABLE_PIN, GPIO.LOW)
+GPIO.add_event_detect(COIN_PIN, GPIO.RISING, callback=coin_inserted, bouncetime=300)
 
-# Add event detection for coin insertion
-GPIO.add_event_detect(COIN_SENSOR_PIN, GPIO.RISING, callback=coin_inserted, bouncetime=50)
+# API endpoints
+@app.route("/api/coins", methods=["GET"])
+def get_coins():
+    return jsonify({"coins": coins_inserted})
 
-@app.route('/')
-def index():
-    return render_template('index.html')
+@app.route("/api/purchase", methods=["POST"])
+def purchase():
+    global coins_inserted
+    data = request.json
+    package_time = data.get("time")
+    package_amount = data.get("amount")
 
-@socketio.on('start_coin_acceptance')
-def start_coin_acceptance():
-    global pulse_count, coin_count, last_pulse_time
+    if not package_time or not package_amount:
+        return jsonify({"error": "Invalid package details"}), 400
 
-    GPIO.output(ENABLE_PIN, GPIO.HIGH)
-    print("Waiting for coins to be inserted...")
-    emit('message', {'status': 'Coin acceptance started'})
+    if coins_inserted < package_amount:
+        return jsonify({"error": "Insufficient coins"}), 400
 
+    coins_inserted -= package_amount
+    purchase_log.append({"time": package_time, "amount": package_amount, "timestamp": time.time()})
+
+    # Print the voucher
+    print_voucher(package_time, package_amount)
+
+    return jsonify({"success": True, "remaining_coins": coins_inserted})
+
+@app.route("/api/reset", methods=["POST"])
+def reset():
+    global coins_inserted, purchase_log
+    coins_inserted = 0
+    purchase_log = []
+    return jsonify({"success": True})
+
+# Run the server
+if __name__ == "__main__":
     try:
-        while True:
-            current_time = time.time()
-            if pulse_count > 0 and current_time - last_pulse_time > 0.5:
-                if pulse_count == 1:
-                    coin_value = 1
-                    print("1 peso inserted")
-                elif pulse_count == 5:
-                    coin_value = 5
-                elif pulse_count == 10:
-                    coin_value = 10
-                else:
-                    coin_value = 0
-
-                coin_count += coin_value
-                print(f"Current total: {coin_count} pesos")
-
-                pulse_count = 0
-
-                emit('coin_update', {'coin_count': coin_count}, broadcast=True)
-                
-               # Enable buttons based on the total coin count
-                emit('update_buttons', {'coin_count': coin_count})
-
-                if coin_count >= 20:
-                    GPIO.output(ENABLE_PIN, GPIO.LOW)
-                    break
-            socketio.sleep(0.1)
-
+        app.run(host="0.0.0.0", port=5000, debug=True)
     except KeyboardInterrupt:
+        print("Server shutting down...")
+    finally:
         GPIO.cleanup()
-
-    return jsonify({'message': 'Coin acceptance completed', 'coin_count': coin_count})
-
-@socketio.on('voucher_button_click')
-def voucher_button_click(amount):
-    global coin_count
-    print(f"Amount received: {amount} pesos")
-    print(f"Current coin count: {coin_count} pesos")
-    
-    if amount in vouchers and vouchers[amount]:
-        voucher_code = vouchers[amount].pop(0)  # Retrieve the voucher code
-        print(f"Dispensing voucher code: {voucher_code}")
-        
-        # Save updated vouchers to CSV
-        save_vouchers(vouchers)
-        
-        # Log the usage of the voucher
-        log_voucher_use(amount, voucher_code)
-        
-        # Print updated voucher totals
-        print_voucher_totals(vouchers)
-        
-        # Print voucher code
-        printer.text(f"Voucher Code: {voucher_code}\n")
-        printer.cut()
-
-        # Reset coin count and pulse count
-        coin_count -= amount
-        emit('voucher_dispensed', {'voucher_code': voucher_code})
-        emit('message', {'status': 'Please get your voucher code'})
-
-        if coin_count == 0:
-            GPIO.output(ENABLE_PIN, GPIO.LOW)
-            # Reset button states and coin count display
-            emit('reset_ui', {'coin_count': coin_count})
-        else:
-            emit('coin_update', {'coin_count': coin_count}, broadcast=True)
-            # Enable buttons based on the total coin count
-            emit('update_buttons', {'coin_count': coin_count})
-    else:
-        emit('voucher_dispensed', {'voucher_code': 'No vouchers available for this amount'})
-        print("No vouchers available for this amount.")
-
-if __name__ == '__main__':
-    socketio.run(app, host="0.0.0.0", port=4000, debug=True)
