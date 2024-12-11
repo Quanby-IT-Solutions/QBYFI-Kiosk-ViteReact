@@ -50,10 +50,11 @@ function App() {
   }, [onIntroOpen]);
 
   const [coinsInserted, setCoinsInserted] = useState(0);
-
-  useEffect(() => {
+  
     // Establish the connection to the Flask backend using Socket.IO
-    const socket = io("http://localhost:4000"); // Change URL if needed for your Flask backend
+    const socket = io("http://localhost:4000"); // Change URL if needed for your
+
+  useEffect(() => { Flask backend
 
     // Listen for coin count updates from the backend
     socket.on("coin_update", (data) => {
@@ -71,7 +72,12 @@ function App() {
 
   const [showModal, setShowModal] = useState(true);
 
-  const closeModal = () => setShowModal(false);
+  const handleCloseModal = () => {
+    setShowModal(false);
+
+    // Emit the 'start_coin_acceptance' event to trigger coin acceptance process
+    socket.emit("start_coin_acceptance");
+  };
 
   const handleSelectPackage = (index: number) => {
     if (selectedPackage === index) {
@@ -93,7 +99,7 @@ function App() {
           dissmissable={false}
           isOpen={isIntroOpen}
           onOpenChange={onIntroOpenChange}
-          setShowModal={closeModal}
+          setShowModal={handleCloseModal}
         >
           <div className="relative w-screen h-screen">
             <div className="absolute z-10 w-full -top-28 -left-80">
