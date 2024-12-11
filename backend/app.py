@@ -10,9 +10,8 @@ import os
 from datetime import datetime 
 
 app = Flask(__name__)
-CORS(app)  # Enable CORS for all routes
-
-socketio = SocketIO(app)
+CORS(app)  # Enable CORS for the entire app
+socketio = SocketIO(app, cors_allowed_origins="*") 
 
 GPIO.setmode(GPIO.BOARD)
 
