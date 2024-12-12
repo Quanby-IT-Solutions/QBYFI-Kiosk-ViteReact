@@ -52,8 +52,10 @@ function App() {
 
   const [coinsInserted, setCoinsInserted] = useState(0);
   const [selectedPackage, setSelectedPackage] = useState<number | null>(null); // Track the selected package
-
   const [showModal, setShowModal] = useState(true);
+  const [isVouchAvail, setIsVouchAvail] = useState(false);
+
+  const handleCheckVoucherAvailable = () => {};
 
   const handleSelectPackage = (index: number) => {
     if (selectedPackage === index) {
