@@ -52,7 +52,10 @@ function App() {
 
   const [coinsInserted, setCoinsInserted] = useState(0);
   const [selectedPackage, setSelectedPackage] = useState<number | null>(null); // Track the selected package
-  const [showModal, setShowModal] = useState(true);
+  const [showModal, setShowModal] = useState(() => {
+    const savedState = localStorage.getItem("showModal");
+    return savedState === "false" ? false : true; // Default to true if not set
+  });
   const [isVouchAvail, setIsVouchAvail] = useState(false);
 
   const handleCheckVoucherAvailable = () => {};
@@ -91,11 +94,22 @@ function App() {
   }, []);
 
   const closeModal = () => {
-    // Close the modal when the user clicks the button or closes the modal
     setShowModal(false);
+    localStorage.setItem("showModal", "false");
 
     // Emit the 'start_coin_acceptance' event to trigger coin acceptance process
     socket.emit("start_coin_acceptance");
+  };
+
+  const handleAnotherTransaction = () => {
+    // Reset state for a new session
+    setSelectedPackage(null);
+
+    // Save state to skip intro modal
+    localStorage.setItem("showModal", "false");
+
+    // Reload the page to reset other states and components
+    window.location.reload();
   };
 
   return (
@@ -313,14 +327,7 @@ function App() {
                   </div>
                   <Button
                     variant="faded"
-                    onPress={() => {
-                      // Reset state for a new session
-                      setSelectedPackage(null);
-
-                      // Close the outro modal and reopen the intro modal
-                      onOutroOpenChange(false);
-                      onIntroOpen();
-                    }}
+                    onPress={handleAnotherTransaction}
                     disableRipple
                     className={`w-fit h-fit transition-all duration-300 hover:bg-gray-100 bg-gradient-to-t from-[#3A1852] to-[#C70655] rounded-xl border-none`}
                   >
