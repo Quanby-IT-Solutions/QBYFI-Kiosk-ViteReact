@@ -72,7 +72,7 @@ function App() {
     }
   };
 
-  const socket = io("http://192.168.40.2:4000", {
+  const socket = io("http://192.168.137.46:4000", {
     transports: ["websocket"],
   });
 
