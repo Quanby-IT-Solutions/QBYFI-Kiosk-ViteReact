@@ -38,6 +38,7 @@ export function OutroModal({
       onOpenChange={onOpenChange}
       isKeyboardDismissDisabled={true}
       className="overflow-clip"
+      disableAnimation
     >
       <ModalContent>
         <ModalBody onClick={handleClick}>{children}</ModalBody>

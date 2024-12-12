@@ -30,6 +30,7 @@ export function IntroModal({
       onOpenChange={onOpenChange}
       isKeyboardDismissDisabled={true}
       className="overflow-clip"
+      disableAnimation
     >
       <ModalContent>
         {(onClose) => (

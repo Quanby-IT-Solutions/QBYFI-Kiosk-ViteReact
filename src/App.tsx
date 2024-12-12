@@ -74,7 +74,7 @@ function App() {
     }
   };
 
-  const socket = io("http://192.168.137.46:4000", {
+  const socket = io("http://192.168.40.5:4000", {
     transports: ["websocket"],
   });
 
@@ -217,6 +217,7 @@ function App() {
             hideCloseButton
             isKeyboardDismissDisabled
             className="text-center w-fit h-fit"
+            disableAnimation
           >
             <ModalContent>
               <ModalHeader>
