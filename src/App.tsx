@@ -246,6 +246,7 @@ function App() {
                   variant="ghost"
                   radius="lg"
                   onPress={() => onConfirmOpenChange(false)}
+                  disableRipple
                   className="w-64 h-fit transition-all duration-300 hover:bg-gray-100 py-4 px-16 items-center bg-[#3A1852]"
                 >
                   <p className="text-3xl text-white font-medium">Back</p>
@@ -254,6 +255,7 @@ function App() {
                   variant="ghost"
                   radius="lg"
                   onPress={handleProceed}
+                  disableRipple
                   className="w-64 h-fit transition-all duration-300 hover:bg-gray-100 py-4 px-16 bg-[#C70655]"
                 >
                   <p className="text-3xl text-white font-medium">Proceed</p>
@@ -319,6 +321,7 @@ function App() {
                       onOutroOpenChange(false);
                       onIntroOpen();
                     }}
+                    disableRipple
                     className={`w-fit h-fit transition-all duration-300 hover:bg-gray-100 bg-gradient-to-t from-[#3A1852] to-[#C70655] rounded-xl border-none`}
                   >
                     <p className={`py-4 px-16 text-3xl text-white font-medium`}>

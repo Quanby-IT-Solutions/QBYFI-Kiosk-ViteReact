@@ -16,8 +16,9 @@ export function BuyButton({
     <Button
       variant="solid"
       radius="lg"
-      onClick={onClick}
-      disabled={!isActive} // Disable the button if no package is selected
+      onPress={onClick}
+      disabled={!isActive}
+      disableRipple
       className={`w-64 h-fit ${
         isActive
           ? "bg-gradient-to-t from-[#3A1852] to-[#8236B8]"

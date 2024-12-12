@@ -216,6 +216,7 @@ function App() {
                   variant="ghost"
                   radius="lg"
                   onPress={() => onConfirmOpenChange(false)}
+                  disableAnimation
                   className="w-64 h-fit transition-all duration-300 hover:bg-gray-100 py-4 px-16 items-center bg-[#3A1852]"
                 >
                   <p className="text-3xl text-white font-medium">Back</p>
@@ -224,6 +225,7 @@ function App() {
                   variant="ghost"
                   radius="lg"
                   onPress={handleProceed}
+                  disableAnimation
                   className="w-64 h-fit transition-all duration-300 hover:bg-gray-100 py-4 px-16 bg-[#C70655]"
                 >
                   <p className="text-3xl text-white font-medium">Proceed</p>
@@ -281,6 +283,7 @@ function App() {
                   </div>
                   <Button
                     variant="faded"
+                    disableAnimation
                     onPress={() => {
                       // Reset state for a new session
                       setSelectedPackage(null);

@@ -20,7 +20,8 @@ export function CardPackage({
     <Button
       variant="ghost"
       radius="lg"
-      onClick={onClick}
+      onPress={onClick}
+      disableRipple
       className={`w-64 h-fit transition-all duration-300 hover:bg-gray-100 border-pink-500 ${
         dimmed ? "opacity-50 pointer-events-auto" : "opacity-100"
       } ${
