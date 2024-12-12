@@ -5,7 +5,6 @@ import { OutroModal } from "./components/custom/outro-modal";
 import { Button, useDisclosure } from "@nextui-org/react";
 import { motion } from "framer-motion";
 import { CardPackage } from "./components/custom/card-package";
-import { BuyButton } from "./components/custom/buy-button";
 import {
   Modal,
   ModalContent,
@@ -52,10 +51,7 @@ function App() {
 
   const [coinsInserted, setCoinsInserted] = useState(0);
   const [selectedPackage, setSelectedPackage] = useState<number | null>(null); // Track the selected package
-  const [showModal, setShowModal] = useState(() => {
-    const savedState = localStorage.getItem("showModal");
-    return savedState === "false" ? false : true; // Default to true if not set
-  });
+  const [showModal, setShowModal] = useState(true);
   const [isVouchAvail, setIsVouchAvail] = useState(false);
 
   const handleCheckVoucherAvailable = () => {};
@@ -93,9 +89,19 @@ function App() {
     };
   }, []);
 
+  useEffect(() => {
+    const skipIntro = localStorage.getItem("skipIntroModal") === "true";
+    if (!skipIntro) {
+      onIntroOpen(); // Open the modal when the page loads
+    } else {
+      setShowModal(false); // Skip the intro modal
+      localStorage.removeItem("skipIntroModal"); // Clear the flag for future reloads
+    }
+  }, [onIntroOpen]);
+
   const closeModal = () => {
+    // Close the modal when the user clicks the button or closes the modal
     setShowModal(false);
-    localStorage.setItem("showModal", "false");
 
     // Emit the 'start_coin_acceptance' event to trigger coin acceptance process
     socket.emit("start_coin_acceptance");
@@ -105,10 +111,10 @@ function App() {
     // Reset state for a new session
     setSelectedPackage(null);
 
-    // Save state to skip intro modal
-    localStorage.setItem("showModal", "false");
+    // Save a flag in localStorage
+    localStorage.setItem("skipIntroModal", "true");
 
-    // Reload the page to reset other states and components
+    // Reload the page
     window.location.reload();
   };
 
@@ -214,11 +220,22 @@ function App() {
                   />
                 ))}
               </div>
-              <BuyButton
-                isActive={selectedPackage !== null}
-                onClick={onConfirmOpen}
-                className="z-10"
-              />
+              <Button
+                variant="solid"
+                radius="lg"
+                onPress={onConfirmOpen}
+                disabled={!selectedPackage === null}
+                disableRipple
+                className={`w-64 h-fit ${
+                  selectedPackage !== null
+                    ? "bg-gradient-to-t from-[#3A1852] to-[#8236B8]"
+                    : "bg-gray-300"
+                }`}
+              >
+                <p className="py-4 px-16 text-3xl text-white font-medium">
+                  Buy
+                </p>
+              </Button>
             </div>
           </div>
 
