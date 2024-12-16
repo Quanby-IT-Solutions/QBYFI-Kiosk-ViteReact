@@ -109,11 +109,11 @@ function App() {
     // Reset state for a new session
     setSelectedPackage(null);
 
-    // Save a flag in localStorage
-    localStorage.setItem("skipIntroModal", "true");
-
     // Reload the page
     window.location.reload();
+
+    // Save a flag in localStorage
+    localStorage.setItem("skipIntroModal", "true");
   };
 
   return (

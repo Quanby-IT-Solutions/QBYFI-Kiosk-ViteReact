@@ -25,7 +25,7 @@ PRODUCT_ID = 0x7009
 printer = Usb(VENDOR_ID, PRODUCT_ID)
 
 COIN_SENSOR_PIN = 3  # GPIO pin connected to the coin acceptor
-ENABLE_PIN = 5
+ENABLE_PIN = 7
 
 coin_count = 0  # Total value of coins inserted
 pulse_count = 0  # To count pulses for determining coin type
