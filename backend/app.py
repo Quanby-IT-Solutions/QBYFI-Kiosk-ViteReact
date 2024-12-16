@@ -151,6 +151,7 @@ def start_coin_acceptance():
     try:
         while True:
             current_time = time.time()
+             # Process coin only if pulses have occurred and if there was enough time between pulses
             if pulse_count > 0 and current_time - last_pulse_time > 0.5:
                 if pulse_count == 1:
                     coin_value = 1  # 1 peso coin
@@ -165,14 +166,49 @@ def start_coin_acceptance():
                     coin_value = 0  # Invalid pulse, ignore it
                     print("Invalid coin pulse")
 
-                # Only add coin value if we're not exceeding the max coin limit
-                if coin_count + coin_value <= max_coins:
-                    coin_count += coin_value
-                    print(f"Current total: {coin_count} pesos")
-                else:
-                    print(f"Coin limit reached. Total: {coin_count} pesos")
-                    # Optionally, provide feedback to user that no more coins are accepted
-                    emit('message', {'status': 'Coin limit reached'})
+                # Calculate remaining capacity to ensure we don't exceed the limit
+                remaining_capacity = max_coins - coin_count
+
+                # Handle coin insertion based on current coin count and capacity
+                if coin_value == 1:
+                    if coin_count < 15:
+                        coin_count += coin_value
+                        print(f"Current total: {coin_count} pesos")
+                    elif coin_count == 15 and remaining_capacity >= coin_value:
+                        coin_count += coin_value
+                        print(f"Current total: {coin_count} pesos")
+                    elif coin_count > 15 and coin_count < 20:
+                        # If coin count is between 16 and 19, only allow coins of value 1
+                        coin_count += coin_value
+                        print(f"Current total: {coin_count} pesos")
+                    else:
+                        print("Coin rejected: Maximum capacity reached or invalid insertion.")
+                        emit('message', {'status': 'Coin rejected: Maximum capacity reached or invalid insertion.'})
+
+                elif coin_value == 5:
+                    if coin_count == 15 and remaining_capacity >= coin_value:
+                        coin_count += coin_value
+                        print(f"Current total: {coin_count} pesos")
+                    elif coin_count > 15 and coin_count < 20:
+                        # Reject 5 peso coins when between 16-19 coins are inserted
+                        print("Coin rejected: Only 1 peso coins allowed between 16-19 coins.")
+                        emit('message', {'status': 'Coin rejected: Only 1 peso coins allowed between 16-19 coins.'})
+                    else:
+                        print("Coin rejected: Maximum capacity reached or invalid insertion.")
+                        emit('message', {'status': 'Coin rejected: Maximum capacity reached or invalid insertion.'})
+
+                elif coin_value == 10:
+                    if coin_count == 15:
+                        # Reject 10 peso coins when exactly 15 coins are inserted
+                        print("Coin rejected: 10 peso coins not allowed at this stage.")
+                        emit('message', {'status': 'Coin rejected: 10 peso coins not allowed at this stage.'})
+                    elif coin_count > 15 and coin_count < 20:
+                        # Reject 10 peso coins between 16-19 coins
+                        print("Coin rejected: Only 1 peso coins allowed between 16-19 coins.")
+                        emit('message', {'status': 'Coin rejected: Only 1 peso coins allowed between 16-19 coins.'})
+                    else:
+                        print("Coin rejected: Maximum capacity reached or invalid insertion.")
+                        emit('message', {'status': 'Coin rejected: Maximum capacity reached or invalid insertion.'})
 
                 pulse_count = 0  # Reset pulse count
 
@@ -186,6 +222,7 @@ def start_coin_acceptance():
                 if coin_count >= max_coins:
                     GPIO.output(ENABLE_PIN, GPIO.LOW)
                     print("Coin acceptance stopped")
+                    emit('message', {'status': 'Coin acceptance stopped. Maximum reached.'})
                     break
 
             socketio.sleep(0.1)

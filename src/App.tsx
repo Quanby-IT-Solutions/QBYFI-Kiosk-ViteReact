@@ -114,6 +114,9 @@ function App() {
 
     // Save a flag in localStorage
     localStorage.setItem("skipIntroModal", "true");
+
+    // Emit the 'start_coin_acceptance' event to trigger coin acceptance process
+    socket.emit("start_coin_acceptance");
   };
 
   return (
