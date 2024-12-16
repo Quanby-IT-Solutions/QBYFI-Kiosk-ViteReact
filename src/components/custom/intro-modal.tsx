@@ -1,4 +1,4 @@
-import { Modal, ModalContent, ModalBody } from "@nextui-org/react";
+import { Modal, ModalContent, ModalBody } from "@nextui-org/modal";
 import React from "react";
 
 export function IntroModal({

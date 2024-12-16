@@ -1,7 +1,7 @@
 "use client";
 
 import React from "react";
-import { Button } from "@nextui-org/react";
+import { Button } from "@nextui-org/button";
 
 export function CardPackage({
   time,

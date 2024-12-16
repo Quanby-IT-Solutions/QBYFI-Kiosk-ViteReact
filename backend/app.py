@@ -1,3 +1,5 @@
+# backend/app.py
+
 from flask import Flask, jsonify, render_template, request
 from flask_socketio import SocketIO, emit
 from flask_cors import CORS  # Import CORS
@@ -90,12 +92,14 @@ def save_vouchers(vouchers):
     except Exception as e:
         print("Error saving vouchers:", e)
 
-# Print the total count of vouchers per amount
+# Print the total count of vouchers per amount and send data to frontend
 def print_voucher_totals(vouchers):
     print("Available vouchers:")
     for amount, codes in vouchers.items():
         print(f"{amount} pesos: {len(codes)}")
-    print()
+    
+    # Emit the total count of vouchers to the frontend
+    socketio.emit('voucher_count', {'vouchers': vouchers})  # Emit to frontend
 
 # Log voucher use
 def log_voucher_use(amount, voucher_code):
