@@ -53,24 +53,6 @@ function App() {
   const [coinsInserted, setCoinsInserted] = useState(0);
   const [selectedPackage, setSelectedPackage] = useState<number | null>(null); // Track the selected package
   const [showModal, setShowModal] = useState(true);
-  const [isVouchAvail, setIsVouchAvail] = useState(false);
-
-  useEffect(() => {
-    socket.on(
-      "voucher_count",
-      (data: { vouchers: { [key: number]: string[] } }) => {
-        const totalVouchers = Object.values(data.vouchers).reduce(
-          (acc, codes) => acc + codes.length,
-          0
-        );
-        setIsVouchAvail(totalVouchers > 0); // Update voucher availability
-      }
-    );
-
-    return () => {
-      socket.off("voucher_count");
-    };
-  }, []);
 
   const handleSelectPackage = (index: number) => {
     if (selectedPackage === index) {
@@ -89,7 +71,7 @@ function App() {
     }
   };
 
-  const socket = io("http://192.168.40.5:4000", {
+  const socket = io("http://192.168.40.4:4000", {
     transports: ["websocket"],
   });
 
@@ -116,24 +98,14 @@ function App() {
   }, [onIntroOpen]);
 
   const closeModal = () => {
-    // Check if vouchers are available before proceeding
-    if (!isVouchAvail) {
-      setIsVouchAvail(false); // No vouchers available
-    } else {
-      setIsVouchAvail(true); // Vouchers available
+    // Close the modal when the user clicks the button or closes the modal
+    setShowModal(false);
 
-      // Close the modal when the user clicks the button or closes the modal
-      setShowModal(false);
-
-      // Emit the 'start_coin_acceptance' event to trigger coin acceptance process
-      socket.emit("start_coin_acceptance");
-    }
+    // Emit the 'start_coin_acceptance' event to trigger coin acceptance process
+    socket.emit("start_coin_acceptance");
   };
 
   const handleAnotherTransaction = () => {
-    socket.on("connect_error", () => {
-      alert("Connection error. Please try again.");
-    });
     // Reset state for a new session
     setSelectedPackage(null);
 
@@ -146,62 +118,7 @@ function App() {
 
   return (
     <motion.div className="p-0 gap-10 overflow-clip">
-      {isVouchAvail ? (
-        <Modal
-          backdrop="blur"
-          isOpen={isConfirmOpen}
-          onOpenChange={onConfirmOpenChange}
-          isDismissable={false}
-          hideCloseButton
-          isKeyboardDismissDisabled
-          className="text-center w-fit h-fit"
-          disableAnimation
-        >
-          <ModalContent>
-            <ModalHeader>
-              You are about to purchase the following package:
-            </ModalHeader>
-            <ModalBody>
-              <ModalBody>
-                <div className="flex flex-col justify-cenetr items-center p-4">
-                  {selectedPackage !== null && (
-                    <CardPackage
-                      time={packages[selectedPackage].time}
-                      amount={packages[selectedPackage].amount}
-                      dimmed={false} // No dimming for display purposes
-                      highlighted={true} // Highlight the selected package
-                      onClick={() => {}} // No action on click in modal
-                    />
-                  )}
-                  <p className="mt-4">
-                    Are you sure you want to proceed with this purchase?
-                  </p>
-                </div>
-              </ModalBody>
-            </ModalBody>
-            <ModalFooter className="justify-around">
-              <Button
-                variant="ghost"
-                radius="lg"
-                onPress={() => onConfirmOpenChange(false)}
-                disableAnimation
-                className="w-64 h-fit transition-all duration-300 hover:bg-gray-100 py-4 px-16 items-center bg-[#3A1852]"
-              >
-                <p className="text-3xl text-white font-medium">Back</p>
-              </Button>
-              <Button
-                variant="ghost"
-                radius="lg"
-                onPress={handleProceed}
-                disableAnimation
-                className="w-64 h-fit transition-all duration-300 hover:bg-gray-100 py-4 px-16 bg-[#C70655]"
-              >
-                <p className="text-3xl text-white font-medium">Proceed</p>
-              </Button>
-            </ModalFooter>
-          </ModalContent>
-        </Modal>
-      ) : showModal ? (
+      {showModal ? (
         <IntroModal
           dissmissable={false}
           isOpen={isIntroOpen}

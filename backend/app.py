@@ -122,10 +122,20 @@ def log_voucher_use(amount, voucher_code):
         print("Error logging voucher use:", e)
 
 def coin_inserted(channel):
-    global last_pulse_time, pulse_count, coin_count
-    current_time = time.time()
-    pulse_count += 1
-    last_pulse_time = current_time
+    global coins_inserted  # Ensure you are using a global or persistent variable
+
+    # Assume 1 coin is added each time the GPIO triggers
+    if coins_inserted < 20:  # Stop counting after 20 coins
+        coins_inserted += 1
+        print(f"Coin inserted. Total: {coins_inserted} pesos.")
+        
+        # Emit the updated coin count to the frontend
+        socketio.emit("coin_update", {"coin_count": coins_inserted})
+
+    # If you need to inform the user that no more coins are being recorded, add logic here
+    else:
+        print("Coin limit reached. No further coins will be accepted.")
+
 
 # Set up the GPIO pin for the coin sensor
 GPIO.setup(COIN_SENSOR_PIN, GPIO.IN, pull_up_down=GPIO.PUD_DOWN)
