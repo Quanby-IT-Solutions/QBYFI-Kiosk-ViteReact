@@ -30,9 +30,10 @@ ENABLE_PIN = 5
 coin_count = 0  # Total value of coins inserted
 pulse_count = 0  # To count pulses for determining coin type
 last_pulse_time = time.time()  # Tracks the time of the last pulse
+max_coins = 20  # Maximum coin limit to be accepted
 
 # Database connection settings
-DATABASE_HOST = '192.168.1.8'
+DATABASE_HOST = '192.168.1.2'
 DATABASE_NAME = 'qbyfidb'
 DATABASE_USER = 'qbyfiuser'
 DATABASE_PASSWORD = 'Alyssa7719!!'
@@ -122,20 +123,10 @@ def log_voucher_use(amount, voucher_code):
         print("Error logging voucher use:", e)
 
 def coin_inserted(channel):
-    global coins_inserted  # Ensure you are using a global or persistent variable
-
-    # Assume 1 coin is added each time the GPIO triggers
-    if coins_inserted < 20:  # Stop counting after 20 coins
-        coins_inserted += 1
-        print(f"Coin inserted. Total: {coins_inserted} pesos.")
-        
-        # Emit the updated coin count to the frontend
-        socketio.emit("coin_update", {"coin_count": coins_inserted})
-
-    # If you need to inform the user that no more coins are being recorded, add logic here
-    else:
-        print("Coin limit reached. No further coins will be accepted.")
-
+    global last_pulse_time, pulse_count
+    current_time = time.time()
+    pulse_count += 1
+    last_pulse_time = current_time
 
 # Set up the GPIO pin for the coin sensor
 GPIO.setup(COIN_SENSOR_PIN, GPIO.IN, pull_up_down=GPIO.PUD_DOWN)
@@ -162,28 +153,41 @@ def start_coin_acceptance():
             current_time = time.time()
             if pulse_count > 0 and current_time - last_pulse_time > 0.5:
                 if pulse_count == 1:
-                    coin_value = 1
+                    coin_value = 1  # 1 peso coin
                     print("1 peso inserted")
                 elif pulse_count == 5:
-                    coin_value = 5
+                    coin_value = 5  # 5 peso coin
+                    print("5 pesos inserted")
                 elif pulse_count == 10:
-                    coin_value = 10
+                    coin_value = 10  # 10 peso coin
+                    print("10 pesos inserted")
                 else:
-                    coin_value = 0
+                    coin_value = 0  # Invalid pulse, ignore it
+                    print("Invalid coin pulse")
 
-                coin_count += coin_value
-                print(f"Current total: {coin_count} pesos")
+                # Only add coin value if we're not exceeding the max coin limit
+                if coin_count + coin_value <= max_coins:
+                    coin_count += coin_value
+                    print(f"Current total: {coin_count} pesos")
+                else:
+                    print(f"Coin limit reached. Total: {coin_count} pesos")
+                    # Optionally, provide feedback to user that no more coins are accepted
+                    emit('message', {'status': 'Coin limit reached'})
 
-                pulse_count = 0
+                pulse_count = 0  # Reset pulse count
 
+                # Emit the updated coin count to the frontend
                 emit('coin_update', {'coin_count': coin_count}, broadcast=True)
                 
-               # Enable buttons based on the total coin count
+                # Enable buttons based on the total coin count
                 emit('update_buttons', {'coin_count': coin_count})
 
-                if coin_count >= 20:
+                # If the coin count reaches or exceeds the maximum, stop accepting coins
+                if coin_count >= max_coins:
                     GPIO.output(ENABLE_PIN, GPIO.LOW)
+                    print("Coin acceptance stopped")
                     break
+
             socketio.sleep(0.1)
 
     except KeyboardInterrupt:
